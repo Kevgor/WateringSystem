@@ -14,6 +14,7 @@ boolean g_fDebugOutput = false;
 void ResetAllSettings();
 void PrintLCDInfo(DateTime timenow);
 void PrintInfoToSerial(DateTime timenow);
+void PrintTimeInfoToSerial(DateTime timenow);
 bool anyOtherToggles(int ch);
 const SettingData & GetFactorySetting(int ch, int sp); 
 

@@ -1,5 +1,6 @@
-#include "wateringsystem.h"
 #include "radio.h"
+
+extern const int RFCommRXPin;
 
 void InitializeRadio() 
 {
