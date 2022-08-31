@@ -166,7 +166,7 @@ void setup() {
   // DateTime xnow(__DATE__, __TIME__);
   // rtc.adjust(xnow);
 
-  // DateTime xnow(2022, 8, 20, 20, 10,0);
+  // DateTime xnow(2022, 8, 22, 13, 19,0);
   // rtc.adjust(xnow);
 
   if(IsLCDEnabled) 

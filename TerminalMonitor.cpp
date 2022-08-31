@@ -8,8 +8,8 @@
 #include "SerialMonitor.h"
 
 //==============================================================================
-// Serial/BlueTooth TerminalMonitor - Simple background task checks to see if 
-// the user is asking us to do anything, like various commands, update debug 
+// Serial/BlueTooth TerminalMonitor - Simple background task checks to see if
+// the user is asking us to do anything, like various commands, update debug
 // levels and the like.
 //==============================================================================
 
@@ -44,6 +44,7 @@ void SerialMonitor(void)
   const char szDHeader[] PROGMEM = "D - Disable  Channel [1-4] ON/OFF";
   const char szFHeader[] PROGMEM = "F - Freeze(Toggle) Announcements";
   const char szSHeader[] PROGMEM = "S - Change Setpoint";
+  const char szZHeader[] PROGMEM = "Z - Change Time";
   const char szWHeader[] PROGMEM = "W - Write FactorySettings into EEPROM";
   const char szStartStopHeader[] PROGMEM = "! - Start/Stop Controller";
 
@@ -120,14 +121,17 @@ void SerialMonitor(void)
       if(ch > NumberOfChannels-1)
       {
         Serial.print(F("There are only "));
-        Serial.print(NumberOfChannels); 
+        Serial.print(NumberOfChannels);
         Serial.print(F(" Channels"));
         Serial.println();
       }
-      else 
+      else
       {
-        // TODO really should only allow one channel to be toggled at 
+        // TODO really should only allow one channel to be toggled at
         // any time.
+        // TODO maybe toggles should automatically turn off after
+        // some predetermined time, like 5 minutes (so watering on a toggle
+        // isn't forgotten, and goes on all day.)
         toggleStatus[ch] = !toggleStatus[ch];
 
         Serial.print(F("Toggle Channel: "));
@@ -145,11 +149,11 @@ void SerialMonitor(void)
       {
         if(toggleStatus[i]) {
           toggleStatus[i] = !toggleStatus[i];
-          channelToggled = i; 
-          break; 
+          channelToggled = i;
+          break;
         }
       }
-      if(channelToggled >= 0) 
+      if(channelToggled >= 0)
       {
         Serial.print(F("Toggle Channel: "));
         Serial.print(channelToggled);
@@ -170,14 +174,14 @@ void SerialMonitor(void)
       if(ch > NumberOfChannels-1)
       {
         Serial.print(F("There are only "));
-        Serial.print(NumberOfChannels); 
+        Serial.print(NumberOfChannels);
         Serial.print(F(" Channels"));
         Serial.println();
       }
-      else 
+      else
       {
         disableMask[ch] = 1;
-        
+
         Serial.print(F("Disable Channel: "));
         Serial.print(ch);
         Serial.println();
@@ -186,24 +190,23 @@ void SerialMonitor(void)
     }
     else if ((ich == 1) && ((receivedChars[0] == 'd') || (receivedChars[0] == 'D')))
     {
-      // Just a plain 'D' will disable all channels
-      // int channelSelected = 3;
-      // channelSelected = ich;
+      // Just a plain 'D' will re-enable all channels
+      int d_idx = 0;
+      while(d_idx < NumberOfChannels) disableMask[d_idx++] = 0;
 
-      Serial.print(F("Disable Channel: Not Implemented"));
-      // Serial.print(channelSelected);
+      Serial.print(F("All Channels Enabled"));
       Serial.println();
-      
-      g_fDebugOutput = g_fShowDebugPrompt;
+
+      g_fDebugOutput = false;
     }
     else if ((ich == 1) && (receivedChars[0] == '!'))
     {
-      Serial.println(F("Turning System Off Off"));
-      if(IsLCDEnabled) 
+      Serial.println(F("Turning System Off (Toggle)"));
+      if(IsLCDEnabled)
       {
         lcd.noBacklight();
       }
-      
+
       g_fShowDebugPrompt = false;
     }
     else if ((ich == 1) && ((receivedChars[0] == 'r') || (receivedChars[0] == 'R')))
@@ -240,7 +243,7 @@ void SerialMonitor(void)
       Serial.print(voltage);
       Serial.println(F(" V"));
 
-      if(IsLCDEnabled) 
+      if(IsLCDEnabled)
       {
         lcd.setCursor(0,0);
         lcd.print(F("Voltage: "));
@@ -264,7 +267,12 @@ void SerialMonitor(void)
     else if ((ich == 1) && ((receivedChars[0] == 'l') || (receivedChars[0] == 'L')))
     {
       g_fShowDebugPrompt = false;  // Do not redraw all the options
-      // Serial.println("Toggling Headlights");
+    }
+    else if ( ((receivedChars[0] == 'z') || (receivedChars[0] == 'Z')))
+    {
+      g_fShowDebugPrompt = false;  // Do not redraw all the options
+      Serial.println(F("[Change Time]"));
+      UpdateTime(receivedChars);
     }
     else if ((ich == 1) && ((receivedChars[0] == '?') ))
     {
@@ -302,6 +310,7 @@ void recvWithEndMarker()
   }
 }
 
+// Update a setpoint and store to EEPROM
 void UpdateSetPoint(const char* receivedChars)
 {
   char szchspBuf[5] PROGMEM;
@@ -366,3 +375,38 @@ void UpdateSetPoint(const char* receivedChars)
     }
   }
 }
+
+// Update time to RTC
+//
+void UpdateTime(const char* receivedChars){
+  char szchspBuf[5] PROGMEM;
+  char szTimeBuf[10] PROGMEM;
+  char szDurationBuf[5] PROGMEM;
+  byte ch, sp, duration;
+  byte thehour, theminute, thesec;
+
+  Serial.println(receivedChars);
+  // Example: S#8:39:00   - Time 08:39:00 to be written to RTC
+  char* tsTok = strtok((char*)receivedChars, "#");
+  char* tsptr = tsTok;
+  int offset = strlen(tsTok); // offset should point at '#'
+  strcpy(szTimeBuf, ++tsptr);
+  char* tmptr = strtok(szTimeBuf, ":");
+  thehour = atoi(tmptr);
+  tmptr = strtok(NULL, ":");
+  theminute = atoi(tmptr);
+  tmptr = strtok(NULL, ":");
+  thesec = atoi(tmptr);
+
+  Serial.print("Hours: ");
+  Serial.println(thehour);
+  Serial.print("Minutes: ");
+  Serial.println(theminute);
+  Serial.print("Seconds: ");
+  Serial.println(thesec);
+  Serial.flush();
+  delay(10);
+
+
+}
+
