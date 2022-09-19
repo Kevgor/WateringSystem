@@ -1,7 +1,7 @@
+#include "wateringsystem.h"
 #include "radio.h"
 
-extern const int RFCommRXPin;
-
+#ifdef RADIO
 void InitializeRadio() 
 {
   // Initialise RF Receiver, the IO and ISR
@@ -10,3 +10,4 @@ void InitializeRadio()
   vw_set_rx_pin(RFCommRXPin);
   vw_rx_start();        
 }
+#endif

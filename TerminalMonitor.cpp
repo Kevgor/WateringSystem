@@ -2,7 +2,10 @@
 #include <RTClib.h>
 #include <EEPROM.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+
+#ifdef I2C_LCD
+// #include <LiquidCrystal_I2C.h>
+#endif
 
 #include "wateringsystem.h"
 #include "SerialMonitor.h"
@@ -21,6 +24,7 @@ extern void PrintLiveSettingsInfoToSerial();
 extern void CreateRunTestPattern();
 extern float voltageRead();
 extern float solarVoltageRead();
+extern float batteryVoltageRead();
 extern float readDHTSensor();
 
 void recvWithEndMarker();
@@ -33,7 +37,7 @@ char receivedChars[numChars];   // an array to store the received data
 
 void SerialMonitor(void)
 {
-  const char szBufHeader[] PROGMEM  = "Arduino Serial Monitor  - Make your Choice";
+  const char szBufHeader[] PROGMEM  = "Watering Serial Monitor  - Make your Choice";
 
   const char szTHeader[] PROGMEM = "T - Toggle Channel [1-4] ON/OFF";
   const char szListHeader[] PROGMEM = "? - Show this List";
@@ -255,9 +259,13 @@ void SerialMonitor(void)
     {
       g_fShowDebugPrompt = false;  // Do not redraw all the options
       Serial.print(F("Read Temperature: "));
+#ifdef DHT      
       float temperature = readDHTSensor();
       Serial.print(temperature);
       Serial.println(F(" C"));
+#else
+      Serial.println(F(" Not available"));
+#endif
     }
     else if ((ich == 1) && ((receivedChars[0] == 'b') || (receivedChars[0] == 'B')))
     {

@@ -1,3 +1,6 @@
-#include <VirtualWire.h>
+#include <Wire.h>
 
-extern void InitializeRadio();
+#ifdef RADIO
+ #include <VirtualWire.h>
+ extern void InitializeRadio();
+#endif

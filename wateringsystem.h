@@ -2,7 +2,11 @@
 
 #include <Wire.h>
 #include <EEPROM.h>
+
+#ifdef I2C_LCD
 #include <LiquidCrystal_I2C.h>
+#endif
+
 #include <RTClib.h>
 
 // Seven Setpoints per channel
@@ -35,14 +39,24 @@ typedef struct tagToggleState ToggleState;
 
 extern ToggleState ToggleStateInfo[5];
 
+#ifdef I2C_LCD
 extern LiquidCrystal_I2C lcd;
 extern boolean IsLCDEnabled;
+#endif
 
 extern boolean bFreezeAnnouncements;
 
+// PIN ASSIGNMENT DIFFERENT ON ESP32 than on Arduino UNO
 const int voltagePin = A2;
+// pin 39 on ESP32?
 
+#ifdef RADIO
 const int RFCommRXPin = 3;
+#endif
 
 const int ReadFromEepromPin = 7;
 const int WriteToEepromPin = 6;
+
+// 8,7 for ESP32?
+
+extern float batteryVoltageRead();
