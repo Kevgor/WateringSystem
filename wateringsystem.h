@@ -2,7 +2,11 @@
 
 #include <Wire.h>
 #include <EEPROM.h>
+
+#ifdef I2C_LCD
 #include <LiquidCrystal_I2C.h>
+#endif
+
 #include <RTClib.h>
 
 // Seven Setpoints per channel
@@ -35,8 +39,10 @@ typedef struct tagToggleState ToggleState;
 
 extern ToggleState ToggleStateInfo[5];
 
+#ifdef I2C_LCD
 extern LiquidCrystal_I2C lcd;
 extern boolean IsLCDEnabled;
+#endif
 
 extern boolean bFreezeAnnouncements;
 

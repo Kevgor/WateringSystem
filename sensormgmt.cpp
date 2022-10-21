@@ -1,13 +1,16 @@
 #include <arduino.h>
 #include <RTClib.h>
 
+#ifdef DHT
 #include <dht.h>
+#endif
 
 #include "wateringsystem.h"
 
+#ifdef DHT
 dht myDHT;
-
 #define dht_apin A0 // Analog Pin DHT sensor 
+#endif
 
 const float vfactor = 0.16042;
 
@@ -27,8 +30,6 @@ float voltageRead() {
   return volts;
 }
 
-
-
 const float vfactor2 = 0.22765;
 
 // Reading the Solar charge input voltage
@@ -43,7 +44,7 @@ float solarVoltageRead() {
   return volts;
 }
 
-
+#ifdef DHT
 float readDHTSensor()
 {
   int dht_result = 0; 
@@ -58,3 +59,4 @@ float readDHTSensor()
 
   return  myDHT.temperature;
 }
+#endif

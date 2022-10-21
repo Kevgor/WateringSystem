@@ -21,10 +21,14 @@ extern void PrintLiveSettingsInfoToSerial();
 extern void CreateRunTestPattern();
 extern float voltageRead();
 extern float solarVoltageRead();
+
+#ifdef DHT
 extern float readDHTSensor();
+#endif 
 
 void recvWithEndMarker();
 void UpdateSetPoint(const char* receivedChars);
+void UpdateTime(const char* receivedChars);
 
 boolean newData = false;
 
@@ -61,6 +65,7 @@ void SerialMonitor(void)
     Serial.println(szDHeader);
     Serial.println(szFHeader);
     Serial.println(szWHeader);
+    Serial.println(szZHeader);
     Serial.println(szListHeader);
     Serial.println(szStartStopHeader);
     Serial.flush();
@@ -254,10 +259,15 @@ void SerialMonitor(void)
     else if ((ich == 1) && ((receivedChars[0] == 'c') || (receivedChars[0] == 'C')))
     {
       g_fShowDebugPrompt = false;  // Do not redraw all the options
+
+      #ifdef DHT
       Serial.print(F("Read Temperature: "));
       float temperature = readDHTSensor();
       Serial.print(temperature);
       Serial.println(F(" C"));
+      #else 
+      Serial.print(F("Temperature Sensor Not Installed"));
+      #endif
     }
     else if ((ich == 1) && ((receivedChars[0] == 'b') || (receivedChars[0] == 'B')))
     {
@@ -406,7 +416,5 @@ void UpdateTime(const char* receivedChars){
   Serial.println(thesec);
   Serial.flush();
   delay(10);
-
-
 }
 
