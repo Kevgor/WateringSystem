@@ -65,6 +65,7 @@ void SerialMonitor(void)
     Serial.println(szDHeader);
     Serial.println(szFHeader);
     Serial.println(szWHeader);
+    Serial.println(szZHeader);
     Serial.println(szListHeader);
     Serial.println(szStartStopHeader);
     Serial.flush();
@@ -415,7 +416,5 @@ void UpdateTime(const char* receivedChars){
   Serial.println(thesec);
   Serial.flush();
   delay(10);
-
-
 }
 
