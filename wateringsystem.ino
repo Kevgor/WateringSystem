@@ -1,10 +1,3 @@
-#include <LiquidCrystal.h>
-
-#include <Wire.h>
-#include <EEPROM.h>
-#include <LiquidCrystal_I2C.h>
-#include <RTClib.h>
-
 #include "wateringsystem.h"
 #include "serialmonitor.h"
 
@@ -14,7 +7,11 @@ boolean g_fShowDebugPrompt = true;
 boolean g_fDebugOutput = false;
 
 void ResetAllSettings();
+
+#ifdef I2C_LCD
 void PrintLCDInfo(DateTime timenow);
+#endif
+
 void PrintInfoToSerial(DateTime timenow);
 void PrintTimeInfoToSerial(DateTime timenow);
 bool anyOtherToggles(int ch);
@@ -24,8 +21,10 @@ RTC_DS1307 rtc;
 
 DateTime now;
 
+#ifdef I2C_LCD
 LiquidCrystal_I2C lcd(0x27,16,2);
 boolean IsLCDEnabled = false;;
+#endif
 
 // This one is not const.
 SettingData Settings[5][8];
@@ -171,11 +170,13 @@ void setup() {
   // DateTime xnow(2022, 8, 22, 13, 19,0);
   // rtc.adjust(xnow);
 
+#ifdef I2C_LCD
   if(IsLCDEnabled) 
   {
     lcd.begin(16,2);
     lcd.backlight();
   }
+#endif
   
   if(IsRTCRunning) {
     now = rtc.now();
@@ -332,10 +333,12 @@ void loop()
     {
       ticks_now = millis();
       PrintInfoToSerial(now);
+#ifdef I2C_LCD
       if(IsLCDEnabled) 
       {
         PrintLCDInfo(now);
       }
+#endif
     }
   }
 }
@@ -632,6 +635,7 @@ void ResetAllSettings()
   }
 }
 
+#ifdef I2C_LCD
 void PrintLCDInfo(DateTime timenow)
 {
     lcd.setCursor(0,0);
@@ -662,6 +666,7 @@ void PrintLCDInfo(DateTime timenow)
     lcd.print( timenow.second(), DEC);
     lcd.setCursor(0,0);
 }
+#endif
 
 // const SettingData factorySettings[5][8]
 // = {

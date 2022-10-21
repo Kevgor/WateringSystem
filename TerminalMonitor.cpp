@@ -1,8 +1,4 @@
 #include <arduino.h>
-#include <RTClib.h>
-#include <EEPROM.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 
 #include "wateringsystem.h"
 #include "SerialMonitor.h"
@@ -207,10 +203,14 @@ void SerialMonitor(void)
     else if ((ich == 1) && (receivedChars[0] == '!'))
     {
       Serial.println(F("Turning System Off (Toggle)"));
+
+      
+#ifdef I2C_LCD
       if(IsLCDEnabled)
       {
         lcd.noBacklight();
       }
+#endif
 
       g_fShowDebugPrompt = false;
     }
@@ -248,6 +248,7 @@ void SerialMonitor(void)
       Serial.print(voltage);
       Serial.println(F(" V"));
 
+#ifdef I2C_LCD
       if(IsLCDEnabled)
       {
         lcd.setCursor(0,0);
@@ -255,6 +256,7 @@ void SerialMonitor(void)
         lcd.print(voltage);
         lcd.print(F(" V"));
       }
+#endif
     }
     else if ((ich == 1) && ((receivedChars[0] == 'c') || (receivedChars[0] == 'C')))
     {

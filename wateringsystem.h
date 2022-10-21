@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <EEPROM.h>
 
+// #define I2C_LCD
 #ifdef I2C_LCD
 #include <LiquidCrystal_I2C.h>
 #endif

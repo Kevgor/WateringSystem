@@ -1,5 +1,4 @@
 #include <arduino.h>
-#include <RTClib.h>
 
 #ifdef DHT
 #include <dht.h>
