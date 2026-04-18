@@ -1,14 +1,15 @@
 #include <arduino.h>
-
-#include <Wire.h>
+#include <RTClib.h>
 #include <EEPROM.h>
+
+#include "version.h"
 
 // #define I2C_LCD
 #ifdef I2C_LCD
 #include <LiquidCrystal_I2C.h>
 #endif
 
-#include <RTClib.h>
+
 
 // Seven Setpoints per channel
 // Four Channel(s)  BY-WW, BY-GH, FY-TM, FY-FY
