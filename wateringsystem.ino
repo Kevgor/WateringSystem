@@ -1,5 +1,6 @@
 #include "wateringsystem.h"
 #include "serialmonitor.h"
+#include "ds3231ext.h"
 
 #include "radio.h"
 
@@ -17,7 +18,8 @@ void PrintTimeInfoToSerial(DateTime timenow);
 bool anyOtherToggles(int ch);
 const SettingData & GetFactorySetting(int ch, int sp); 
 
-RTC_DS1307 rtc;
+// RTC_DS1307 rtc;
+RTC_DS3231_Ext rtc;
 
 DateTime now;
 
@@ -172,7 +174,7 @@ void setup() {
   // DateTime xnow(__DATE__, __TIME__);
   // rtc.adjust(xnow);
 
-  // DateTime xnow(2022, 8, 22, 13, 19,0);
+  // DateTime xnow(2026, 4, 18, 23, 48,0);
   // rtc.adjust(xnow);
 
 #ifdef I2C_LCD
