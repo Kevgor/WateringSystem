@@ -6,4 +6,5 @@ extern boolean g_fDebugOutput;
 extern bool toggleStatus[];
 extern bool disableMask[];
 
+extern void ToggleProgramFlag(void);
 extern void SerialMonitor(void);

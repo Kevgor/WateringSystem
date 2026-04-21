@@ -1,6 +1,5 @@
 #include "wateringsystem.h"
 #include "serialmonitor.h"
-#include "ds3231ext.h"
 
 #include "radio.h"
 
@@ -18,7 +17,6 @@ void PrintTimeInfoToSerial(DateTime timenow);
 bool anyOtherToggles(int ch);
 const SettingData & GetFactorySetting(int ch, int sp); 
 
-// RTC_DS1307 rtc;
 RTC_DS3231_Ext rtc;
 
 DateTime now;
@@ -27,6 +25,8 @@ DateTime now;
 LiquidCrystal_I2C lcd(0x27,16,2);
 boolean IsLCDEnabled = false;;
 #endif
+
+bool bRunProgram = true;
 
 // This one is not const.
 SettingData Settings[5][8];
@@ -49,6 +49,10 @@ unsigned long ticks_now = 0;
 int announcePeriod2 = 5000;
 unsigned long ticks_now2 = 0;
 
+unsigned long toggleMaxPeriod = 300000;
+unsigned long ticks_maxPeriod = 0;
+bool bMaxTogglePeriodReached = false;
+
 // Hour and Minute when Setup was run.
 int starthour, startminute;
 
@@ -67,7 +71,7 @@ void setup() {
   // Wire.begin();        // join i2c bus (address optional for master)
   Serial.begin(9600);  // start serial for output
 
-  Serial.print(F("Hello Watering System Spring 2026\n"));
+  Serial.print(F("Hello Watering System\n"));
   Serial.println("Firmware Version: " FW_VERSION);
   Serial.print("Compiled: ");
   Serial.print(FW_COMPILED_DATE);
@@ -225,11 +229,11 @@ void loop()
   //}
 
   // If its 7 am lets reset all state and settings for a clean daily start.
-//  if(now.hour() == 7 && now.minute() < 3 && !bDailyReset)
-//  {
-//    bDailyReset = true;
-//    ResetAllSettings();
-//  }
+  //  if(now.hour() == 7 && now.minute() < 3 && !bDailyReset)
+  //  {
+  //    bDailyReset = true;
+  //    ResetAllSettings();
+  //  }
 
   SerialMonitor();
 
@@ -240,80 +244,83 @@ void loop()
   //     // All good, check message for Rain Advisory  
   // }
   
-  // Test for Sprinkling intervals
-  for (int sp = 0; sp < NumberOfSetpoints; sp++)
+  if(bRunProgram) 
   {
-    for (int ch = 0; ch < NumberOfChannels; ch++)
+    // Test for Sprinkling intervals
+    for (int sp = 0; sp < NumberOfSetpoints; sp++)
     {
-      // if disable mask for a channel is on, don't bother
-      // turning on. 
-      if (!disableMask[ch] && settingsStatus[ch][sp] == 0)
+      for (int ch = 0; ch < NumberOfChannels; ch++)
       {
-        if ( Settings[ch][sp].Duration > 0 ) // Skip if duration = 0;
+        // if disable mask for a channel is on, don't bother
+        // turning on. 
+        if (!disableMask[ch] && settingsStatus[ch][sp] == 0)
         {
-          if ((now.hour() ==  Settings[ch][sp].Hours)
-              && (now.minute() == Settings[ch][sp].Minutes)
-              && (now.second() >= Settings[ch][sp].Seconds )
-              && (now.second() <= Settings[ch][sp].Seconds + 2) )
+          if ( Settings[ch][sp].Duration > 0 ) // Skip if duration = 0;
           {
-            settingsStatus[ch][sp] = 1;
-            channelStatus[ch] = true;
-            digitalWrite(outputPins[ch], HIGH);
+            if ((now.hour() ==  Settings[ch][sp].Hours)
+                && (now.minute() == Settings[ch][sp].Minutes)
+                && (now.second() >= Settings[ch][sp].Seconds )
+                && (now.second() <= Settings[ch][sp].Seconds + 2) )
+            {
+              settingsStatus[ch][sp] = 1;
+              channelStatus[ch] = true;
+              digitalWrite(outputPins[ch], HIGH);
+            }
           }
         }
       }
     }
-  }
 
-  for (int sp = 0; sp < NumberOfSetpoints; sp++)
-  {
-    for (int ch = 0; ch < NumberOfChannels; ch++)
+    for (int sp = 0; sp < NumberOfSetpoints; sp++)
     {
-      if(disableMask[ch]) 
+      for (int ch = 0; ch < NumberOfChannels; ch++)
       {
-        settingsStatus[ch][sp] = 0;
-        channelStatus[ch] = false;
-        digitalWrite(outputPins[ch], LOW);
-      }
-      else if (!disableMask[ch] && settingsStatus[ch][sp] == 1)
-      {
-        // Duration is in seconds, but for crossing over minute boundaries
-        // we do a modulo thing
-        int calcSecondsSetpoint = Settings[ch][sp].Seconds;
-        int calcMinutesSetpoint = Settings[ch][sp].Minutes;
-        int calcHoursSetpoint = Settings[ch][sp].Hours;
-
-        // Duration can be at max 255 so something less than 5 minutes
-        int durInMinutes = Settings[ch][sp].Duration / 60;
-        int durSeconds = Settings[ch][sp].Duration % 60;
-
-        int durHourOverflow = 0;
-        if (calcMinutesSetpoint + durInMinutes > 60) {
-          durHourOverflow = 1; // Increment the Hour
-          durInMinutes = (calcMinutesSetpoint + durInMinutes) - 60;
-          calcMinutesSetpoint = 0;
-        }
-
-        int durMinutesOverflow = 0;
-        if (calcSecondsSetpoint + durSeconds > 60)
-        {
-          durMinutesOverflow = 1;
-          calcSecondsSetpoint = (calcSecondsSetpoint + durSeconds) - 60;
-          durSeconds = 0;
-        }
-
-        if ((now.hour() ==  calcHoursSetpoint + durHourOverflow)
-            && (now.minute() >=  calcMinutesSetpoint + durInMinutes + durMinutesOverflow )
-            && (now.second() >=  calcSecondsSetpoint + durSeconds ))
+        if(disableMask[ch]) 
         {
           settingsStatus[ch][sp] = 0;
           channelStatus[ch] = false;
           digitalWrite(outputPins[ch], LOW);
         }
+        else if (!disableMask[ch] && settingsStatus[ch][sp] == 1)
+        {
+          // Duration is in seconds, but for crossing over minute boundaries
+          // we do a modulo thing
+          int calcSecondsSetpoint = Settings[ch][sp].Seconds;
+          int calcMinutesSetpoint = Settings[ch][sp].Minutes;
+          int calcHoursSetpoint = Settings[ch][sp].Hours;
+
+          // Duration can be at max 255 so something less than 5 minutes
+          int durInMinutes = Settings[ch][sp].Duration / 60;
+          int durSeconds = Settings[ch][sp].Duration % 60;
+
+          int durHourOverflow = 0;
+          if (calcMinutesSetpoint + durInMinutes > 60) {
+            durHourOverflow = 1; // Increment the Hour
+            durInMinutes = (calcMinutesSetpoint + durInMinutes) - 60;
+            calcMinutesSetpoint = 0;
+          }
+
+          int durMinutesOverflow = 0;
+          if (calcSecondsSetpoint + durSeconds > 60)
+          {
+            durMinutesOverflow = 1;
+            calcSecondsSetpoint = (calcSecondsSetpoint + durSeconds) - 60;
+            durSeconds = 0;
+          }
+
+          if ((now.hour() ==  calcHoursSetpoint + durHourOverflow)
+              && (now.minute() >=  calcMinutesSetpoint + durInMinutes + durMinutesOverflow )
+              && (now.second() >=  calcSecondsSetpoint + durSeconds ))
+          {
+            settingsStatus[ch][sp] = 0;
+            channelStatus[ch] = false;
+            digitalWrite(outputPins[ch], LOW);
+          }
+        }
       }
     }
   }
-
+  
   for (int ch = 0; ch < NumberOfChannels; ch++)
   { 
     // if we are disabled for this channel, do nothing
@@ -331,6 +338,17 @@ void loop()
         {
           digitalWrite(outputPins[ch], LOW);
         }
+
+        if (toggleStatus[ch] )
+        {
+          if(anyTogglesActive() && bMaxTogglePeriodReached) { 
+            bMaxTogglePeriodReached = false;
+            Serial.print(F("Toggle Max 5m Timer reached, turning toggled channel off"));
+            Serial.println(F(""));
+            digitalWrite(outputPins[ch], LOW);
+            toggleStatus[ch] = false;
+          }
+        }
       }
     }
   }
@@ -341,14 +359,29 @@ void loop()
     {
       ticks_now = millis();
       PrintInfoToSerial(now);
-#ifdef I2C_LCD
+
+      #ifdef I2C_LCD
       if(IsLCDEnabled) 
       {
         PrintLCDInfo(now);
       }
-#endif
+      #endif
+
     }
   }
+
+  if ( millis() > ticks_maxPeriod + toggleMaxPeriod )
+    {
+      if(!bMaxTogglePeriodReached)
+      {
+        // ticks_maxPeriod = millis();
+        // we have reached the max time a toggle should be on, 
+        // but it will only be used if a channel is toggled
+        if(anyTogglesActive() ) {
+          bMaxTogglePeriodReached = true;
+        }
+      }
+    }
 }
 
 const char string_SUN[] PROGMEM = "Sunday"; 
@@ -399,7 +432,16 @@ void PrintInfoToSerial(DateTime timenow)
     
   PrintTimeInfoToSerial(timenow);
   
-  Serial.print(F("All Settings: "));
+  Serial.print(F("All Settings "));
+
+  if(bRunProgram) 
+  {
+    Serial.print(F("(Program ON)"));
+  } else {
+    Serial.print(F("(Program OFF)"));
+  }
+
+  Serial.print(F(": "));
   Serial.println();
 
   for (int ch = 0; ch < NumberOfChannels; ch++)
@@ -625,6 +667,14 @@ bool anyOtherToggles(int ch) {
   return anyOtherToggles;
 }
 
+bool anyTogglesActive() {
+  bool anyToggles;
+  for (int i = 0; i < NumberOfChannels; i++) {
+    anyToggles |= toggleStatus[i];
+  }
+  return anyToggles;
+}
+
 void ResetAllSettings() 
 {
   for (int ch = 0; ch < NumberOfChannels; ch++)
@@ -676,6 +726,17 @@ void PrintLCDInfo(DateTime timenow)
 }
 #endif
 
+void ToggleProgramFlag() 
+{
+  Serial.print(F("Toggle Program (On/Off): "));
+  bRunProgram = !bRunProgram;
+  if(bRunProgram) {
+    Serial.print(F("Program is now ON"));
+  } else {
+    Serial.print(F("Program is now OFF"));
+  }
+  Serial.println();
+}
 const SettingData factorySettings[5][8]
 = {
   { {9, 15, 0, 120, 0}, {11, 05, 0, 140, 0}, {13, 10, 0, 140, 0}, {14, 30, 0, 160, 0}, {16, 20, 0, 140, 0}, {17, 30, 0, 140, 0},{18, 35, 0, 120, 0}, {19, 35, 0, 0, 0} },
@@ -696,6 +757,7 @@ const SettingData factorySettings[5][8]
 
 const SettingData & GetFactorySetting(int ch, int sp) 
 {
+  // return autumnFactorySettings[ch][sp];
   return factorySettings[ch][sp];
 } 
 

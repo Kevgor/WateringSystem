@@ -3,6 +3,8 @@
 #include "wateringsystem.h"
 #include "SerialMonitor.h"
 
+extern RTC_DS1307 rtc;
+
 //==============================================================================
 // Serial/BlueTooth TerminalMonitor - Simple background task checks to see if
 // the user is asking us to do anything, like various commands, update debug
@@ -102,6 +104,10 @@ void SerialMonitor(void)
       {
         CreateRunTestPattern();
       }
+      else if ( (receivedChars[1] == 'z') || (receivedChars[1] == 'Z') )
+      {
+        ToggleProgramFlag();
+      }
       g_fDebugOutput = !g_fDebugOutput;
     }
     else if ((ich == 3) && ((receivedChars[0] == 'p') || (receivedChars[0] == 'P')))
@@ -133,6 +139,10 @@ void SerialMonitor(void)
         // TODO maybe toggles should automatically turn off after
         // some predetermined time, like 5 minutes (so watering on a toggle
         // isn't forgotten, and goes on all day.)
+        if(!toggleStatus[ch]) {
+          // if its off then its about to be turned on so start the 5 minute timer
+          ticks_maxPeriod = millis();
+        }
         toggleStatus[ch] = !toggleStatus[ch];
 
         Serial.print(F("Toggle Channel: "));
@@ -181,7 +191,7 @@ void SerialMonitor(void)
       }
       else
       {
-        disableMask[ch] = 1;
+        disableMask[ch] = true;
 
         Serial.print(F("Disable Channel: "));
         Serial.print(ch);
@@ -193,7 +203,7 @@ void SerialMonitor(void)
     {
       // Just a plain 'D' will re-enable all channels
       int d_idx = 0;
-      while(d_idx < NumberOfChannels) disableMask[d_idx++] = 0;
+      while(d_idx < NumberOfChannels) disableMask[d_idx++] = false;
 
       Serial.print(F("All Channels Enabled"));
       Serial.println();
@@ -203,15 +213,12 @@ void SerialMonitor(void)
     else if ((ich == 1) && (receivedChars[0] == '!'))
     {
       Serial.println(F("Turning System Off (Toggle)"));
-
-      
 #ifdef I2C_LCD
       if(IsLCDEnabled)
       {
         lcd.noBacklight();
       }
 #endif
-
       g_fShowDebugPrompt = false;
     }
     else if ((ich == 1) && ((receivedChars[0] == 'r') || (receivedChars[0] == 'R')))
@@ -418,5 +425,20 @@ void UpdateTime(const char* receivedChars){
   Serial.println(thesec);
   Serial.flush();
   delay(10);
+
+  DateTime timenow = rtc.now();
+  Serial.print("Day: ");
+  Serial.println(timenow.day(), DEC);
+  Serial.print("Month: ");
+  Serial.println(timenow.month(), DEC);
+  Serial.print("Year: ");
+  Serial.println(timenow.year(), DEC);
+  Serial.flush();
+  delay(10);
+
+  // Really need to validate the inputs heavily
+
+  DateTime xnow(timenow.year(), timenow.month(), timenow.day(), thehour, theminute, thesec);
+  rtc.adjust(xnow);
 }
 

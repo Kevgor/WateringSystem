@@ -1,6 +1,7 @@
 #include <arduino.h>
 #include <RTClib.h>
 #include <EEPROM.h>
+#include "ds3231ext.h"
 
 #include "version.h"
 
@@ -8,8 +9,6 @@
 #ifdef I2C_LCD
 #include <LiquidCrystal_I2C.h>
 #endif
-
-
 
 // Seven Setpoints per channel
 // Four Channel(s)  BY-WW, BY-GH, FY-TM, FY-FY
@@ -34,12 +33,14 @@ extern SettingData Settings[5][8];
 
 struct tagToggleState {
   bool IsOn;
-  DateTime timeToggledOn;
+  //DateTime timeToggledOn;
 };
 
 typedef struct tagToggleState ToggleState;
 
 extern ToggleState ToggleStateInfo[5];
+
+extern unsigned long ticks_maxPeriod;
 
 #ifdef I2C_LCD
 extern LiquidCrystal_I2C lcd;
