@@ -618,6 +618,12 @@ void PrintDebugStatusInfoToSerial()
   Serial.println();
   delay(10);
 
+  Serial.println("Firmware Version: " FW_VERSION);
+  Serial.print("Compiled: ");
+  Serial.print(FW_COMPILED_DATE);
+  Serial.print(" ");
+  Serial.println(FW_COMPILED_TIME);
+
   // Now write something out
   for (int ch = 0; ch < NumberOfChannels; ch++)
   {
