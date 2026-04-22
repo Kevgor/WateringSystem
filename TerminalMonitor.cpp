@@ -269,14 +269,13 @@ void SerialMonitor(void)
     {
       g_fShowDebugPrompt = false;  // Do not redraw all the options
 
-      #ifdef DHT
       Serial.print(F("Read Temperature: "));
-      float temperature = readDHTSensor();
-      Serial.print(temperature);
+      float temp = rtc.getTemperature();
+      char tempBuf[24];
+      sprintf(tempBuf, "%f", temp);
+      String tempString = tempBuf;
+      Serial.print(tempString);
       Serial.println(F(" C"));
-      #else 
-      Serial.print(F("Temperature Sensor Not Installed"));
-      #endif
     }
     else if ((ich == 1) && ((receivedChars[0] == 'b') || (receivedChars[0] == 'B')))
     {
