@@ -3,7 +3,7 @@
 #include "wateringsystem.h"
 #include "SerialMonitor.h"
 
-extern RTC_DS1307 rtc;
+extern RTC_DS3231_Ext rtc;
 
 //==============================================================================
 // Serial/BlueTooth TerminalMonitor - Simple background task checks to see if
@@ -19,10 +19,6 @@ extern void PrintLiveSettingsInfoToSerial();
 extern void CreateRunTestPattern();
 extern float voltageRead();
 extern float solarVoltageRead();
-
-#ifdef DHT
-extern float readDHTSensor();
-#endif 
 
 void recvWithEndMarker();
 void UpdateSetPoint(const char* receivedChars);
@@ -271,10 +267,7 @@ void SerialMonitor(void)
 
       Serial.print(F("Read Temperature: "));
       float temp = rtc.getTemperature();
-      char tempBuf[24];
-      sprintf(tempBuf, "%f", temp);
-      String tempString = tempBuf;
-      Serial.print(tempString);
+      Serial.print(temp);
       Serial.println(F(" C"));
     }
     else if ((ich == 1) && ((receivedChars[0] == 'b') || (receivedChars[0] == 'B')))
