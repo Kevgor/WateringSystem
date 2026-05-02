@@ -59,7 +59,6 @@ int starthour, startminute;
 boolean WriteToEepromOnly = false;
 boolean IsRTCRunning = false;
 
-const unsigned outputPins[5] = {12, 11, 10, 9, 8};
 
 void setup() {
   // Initialise RF Receiver, the IO and ISR
