@@ -49,7 +49,6 @@ void SerialMonitor(void)
   if (g_fShowDebugPrompt) {
     // See if we need to output a prompt.
     Serial.println(szBufHeader);
-    //Serial.println("D - Toggle debug on or off");
     Serial.println(szCHeader);
     Serial.println(szRHeader);
     Serial.println(szVHeader);
@@ -390,18 +389,26 @@ void UpdateSetPoint(const char* receivedChars)
 // Update time to RTC
 //
 void UpdateTime(const char* receivedChars){
-  char szchspBuf[5] PROGMEM;
-  char szTimeBuf[10] PROGMEM;
-  char szDurationBuf[5] PROGMEM;
+  char szTimeBuf[10];
   byte ch, sp, duration;
   byte thehour, theminute, thesec;
 
   Serial.println(receivedChars);
-  // Example: S#8:39:00   - Time 08:39:00 to be written to RTC
+  // Example: Z#08:39:00   - Time 08:39:00 to be written to RTC, date left alone
+  // Example: Zt#08:39:00   - Time 08:39:00 to be written to RTC, date left alone
+  // Example: Zd#24/04/2026   - Date April 24, 2026 to be written to RTC, time left alone
+  // For date the format dd/mm/yyyy must be followed extactly
   char* tsTok = strtok((char*)receivedChars, "#");
-  char* tsptr = tsTok;
+  
   int offset = strlen(tsTok); // offset should point at '#'
-  strcpy(szTimeBuf, ++tsptr);
+  Serial.print("Token Length "); 
+  Serial.println(offset);
+  if(offset == 2) 
+    strcpy(szTimeBuf, tsTok+3);
+  else if(offset == 1)
+    strcpy(szTimeBuf, tsTok+2);
+
+  Serial.println(szTimeBuf);
   char* tmptr = strtok(szTimeBuf, ":");
   thehour = atoi(tmptr);
   tmptr = strtok(NULL, ":");

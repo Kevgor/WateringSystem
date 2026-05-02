@@ -49,9 +49,10 @@ extern boolean IsLCDEnabled;
 
 extern boolean bFreezeAnnouncements;
 
-const int voltagePin = A2;
-
-const int RFCommRXPin = 3;
-
-const int ReadFromEepromPin = 7;
-const int WriteToEepromPin = 6;
+// PIN ASSIGNMENTS
+// 
+const unsigned voltagePin = A2;
+const unsigned  RFCommRXPin = 3;
+const unsigned  ReadFromEepromPin = 7;
+const unsigned  WriteToEepromPin = 6;
+const unsigned  outputPins[5] = {12, 11, 10, 9, 8};
