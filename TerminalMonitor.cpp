@@ -33,13 +33,13 @@ void SerialMonitor(void)
 {
   const char szBufHeader[] PROGMEM  = "Arduino Serial Monitor  - Make your Choice";
 
-  const char szTHeader[] PROGMEM = "T - Toggle Channel [1-4] ON/OFF";
+  const char szTHeader[] PROGMEM = "T - Toggle Channel [1-6] ON/OFF";
   const char szListHeader[] PROGMEM = "? - Show this List";
   const char szVHeader[] PROGMEM = "V - Read Input Supply Voltage";
   const char szCHeader[] PROGMEM = "C - Read Temperature Sensor";
   const char szRHeader[] PROGMEM = "R - Report Status";
   const char szPHeader[] PROGMEM = "P - Process Program  (PE, PL, PT, PUL)";
-  const char szDHeader[] PROGMEM = "D - Disable  Channel [1-4] ON/OFF";
+  const char szDHeader[] PROGMEM = "D - Disable  Channel [1-8] ON/OFF";
   const char szFHeader[] PROGMEM = "F - Freeze(Toggle) Announcements";
   const char szSHeader[] PROGMEM = "S - Change Setpoint";
   const char szZHeader[] PROGMEM = "Z - Change Time";
@@ -401,7 +401,7 @@ void UpdateTime(const char* receivedChars){
   char* tsTok = strtok((char*)receivedChars, "#");
   
   int offset = strlen(tsTok); // offset should point at '#'
-  Serial.print("Token Length "); 
+  Serial.print(F("Token Length: ")); 
   Serial.println(offset);
   if(offset == 2) 
     strcpy(szTimeBuf, tsTok+3);
@@ -416,21 +416,21 @@ void UpdateTime(const char* receivedChars){
   tmptr = strtok(NULL, ":");
   thesec = atoi(tmptr);
 
-  Serial.print("Hours: ");
+  Serial.print(F("Hours: "));
   Serial.println(thehour);
-  Serial.print("Minutes: ");
+  Serial.print(F("Minutes: "));
   Serial.println(theminute);
-  Serial.print("Seconds: ");
+  Serial.print(F("Seconds: "));
   Serial.println(thesec);
   Serial.flush();
   delay(10);
 
   DateTime timenow = rtc.now();
-  Serial.print("Day: ");
+  Serial.print(F("Day: "));
   Serial.println(timenow.day(), DEC);
-  Serial.print("Month: ");
+  Serial.print(F("Month: "));
   Serial.println(timenow.month(), DEC);
-  Serial.print("Year: ");
+  Serial.print(F("Year: "));
   Serial.println(timenow.year(), DEC);
   Serial.flush();
   delay(10);

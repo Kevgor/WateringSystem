@@ -1,5 +1,5 @@
 
-Ver 1.0  - 5 channel watering system with serial interface running over bluetooth
+Ver 1.1  - 7 channel watering system with serial interface running over bluetooth
 
 Implemented Git version info so that I can see what version of the code is running in the Arduino
 

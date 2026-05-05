@@ -12,8 +12,8 @@
 
 // Seven Setpoints per channel
 // Four Channel(s)  BY-WW, BY-GH, FY-TM, FY-FY
-const int NumberOfSetpoints = 8;
-const int NumberOfChannels = 5;    
+const uint8_t NumberOfSetpoints = 8;
+const uint8_t NumberOfChannels = 7;    
 
 struct tagSettingData {
   byte Hours;  // 24 hour clock
@@ -29,7 +29,7 @@ typedef struct tagSettingData SettingData;
 // 5 bytes (struct), x 5 bytes (channels), x 8 bytes daily settings
 // this is 200 bytes
 
-extern SettingData Settings[5][8];
+extern SettingData Settings[NumberOfChannels][NumberOfSetpoints];
 
 struct tagToggleState {
   bool IsOn;
@@ -38,7 +38,7 @@ struct tagToggleState {
 
 typedef struct tagToggleState ToggleState;
 
-extern ToggleState ToggleStateInfo[5];
+extern ToggleState ToggleStateInfo[NumberOfChannels];
 
 extern unsigned long ticks_maxPeriod;
 
@@ -51,8 +51,8 @@ extern boolean bFreezeAnnouncements;
 
 // PIN ASSIGNMENTS
 // 
-const unsigned voltagePin = A2;
-const unsigned  RFCommRXPin = 3;
-const unsigned  ReadFromEepromPin = 7;
-const unsigned  WriteToEepromPin = 6;
-const unsigned  outputPins[5] = {12, 11, 10, 9, 8};
+const uint8_t voltagePin  = A2;
+const uint8_t  RFCommRXPin   = 3;
+const uint8_t  ReadFromEepromPin  = 7;
+const uint8_t  WriteToEepromPin  = 6;
+const uint8_t  outputPins[NumberOfChannels] = {12, 11, 10, 9, 8, 5, 4};

@@ -14,8 +14,7 @@ void PrintLCDInfo(DateTime timenow);
 
 void PrintInfoToSerial(DateTime timenow);
 void PrintTimeInfoToSerial(DateTime timenow);
-bool anyOtherToggles(int ch);
-const SettingData & GetFactorySetting(int ch, int sp); 
+// bool anyOtherToggles(uint8_t ch);
 
 RTC_DS3231_Ext rtc;
 
@@ -29,16 +28,24 @@ boolean IsLCDEnabled = false;;
 bool bRunProgram = true;
 
 // This one is not const.
-SettingData Settings[5][8];
+SettingData Settings[NumberOfChannels][NumberOfSetpoints];
 
 // All off
-byte settingsStatus[5][8] = {{0, 0, 0, 0, 0, 0, 0, 0 }, {0, 0, 0, 0, 0, 0, 0, 0 }, {0, 0, 0, 0, 0, 0, 0, 0 }, {0, 0, 0, 0, 0, 0, 0, 0 }, {0, 0, 0, 0, 0, 0, 0, 0 } };
+byte settingsStatus[NumberOfChannels][NumberOfSetpoints] = {
+{0, 0, 0, 0, 0, 0, 0, 0 }, 
+{0, 0, 0, 0, 0, 0, 0, 0 }, 
+{0, 0, 0, 0, 0, 0, 0, 0 }, 
+{0, 0, 0, 0, 0, 0, 0, 0 }, 
+{0, 0, 0, 0, 0, 0, 0, 0 }, 
+{0, 0, 0, 0, 0, 0, 0, 0 }, 
+{0, 0, 0, 0, 0, 0, 0, 0 } 
+};
 
-bool disableMask[5] = {false, false, false,  false, false};
-bool toggleStatus[5] = {false, false, false, false, false};
-bool channelStatus[5] = {false, false, false, false, false};
+bool disableMask[NumberOfChannels] = {false, false, false,  false, false, false, false};
+bool toggleStatus[NumberOfChannels] = {false, false, false, false, false, false, false};
+bool channelStatus[NumberOfChannels] = {false, false, false, false, false, false, false};
 
-ToggleState ToggleStateInfo[5];
+ToggleState ToggleStateInfo[NumberOfChannels];
 
 bool bDailyReset = false;
 
@@ -46,15 +53,15 @@ bool bFreezeAnnouncements = false;
 int announcePeriod = 20000;
 unsigned long ticks_now = 0;
 
-int announcePeriod2 = 5000;
+const int announcePeriod2 = 5000;
 unsigned long ticks_now2 = 0;
 
-unsigned long toggleMaxPeriod = 300000;
+const unsigned long toggleMaxPeriod = 300000;
 unsigned long ticks_maxPeriod = 0;
 bool bMaxTogglePeriodReached = false;
 
 // Hour and Minute when Setup was run.
-int starthour, startminute;
+uint8_t  starthour, startminute;
 
 boolean WriteToEepromOnly = false;
 boolean IsRTCRunning = false;
@@ -71,10 +78,11 @@ void setup() {
   Serial.begin(9600);  // start serial for output
 
   Serial.print(F("Hello Watering System\n"));
-  Serial.println("Firmware Version: " FW_VERSION);
-  Serial.print("Compiled: ");
+  Serial.print(F("Firmware Version: "));
+  Serial.println(FW_VERSION);
+  Serial.print(F("Compiled: "));
   Serial.print(FW_COMPILED_DATE);
-  Serial.print(" ");
+  Serial.print(F(" "));
   Serial.println(FW_COMPILED_TIME);
 
   if ( digitalRead(WriteToEepromPin) == 1 )
@@ -140,9 +148,9 @@ void setup() {
 
   */
 
-  for (int sp = 0; sp < NumberOfSetpoints; sp++)
+  for (uint8_t sp = 0; sp < NumberOfSetpoints; sp++)
   {
-    for (int ch = 0; ch < NumberOfChannels; ch++)
+    for (uint8_t ch = 0; ch < NumberOfChannels; ch++)
     {
         Settings[ch][sp] =  GetFactorySetting(ch,sp);
     }
@@ -417,13 +425,18 @@ void PrintTimeInfoToSerial(DateTime timenow)
   Serial.println();
 }
 
+// Fill out channel names up to 8 channels 
+// which is probably most an Arduino Uno could support
 const char string_CH0[] PROGMEM = "BY-BY"; 
 const char string_CH1[] PROGMEM = "BY-GH";
 const char string_CH2[] PROGMEM = "FY-TM";
 const char string_CH3[] PROGMEM = "FY-FY";
 const char string_CH4[] PROGMEM = "FY-FF";
+const char string_CH5[] PROGMEM = "BY-HL";
+const char string_CH6[] PROGMEM = "FY-BV";
+const char string_CH7[] PROGMEM = "FY-SW";
 
-const char *const channelNames[] PROGMEM = {string_CH0, string_CH1, string_CH2, string_CH3, string_CH4};
+const char *const channelNames[] PROGMEM = {string_CH0, string_CH1, string_CH2, string_CH3, string_CH4, string_CH5, string_CH6, string_CH7};
 
 void PrintInfoToSerial(DateTime timenow)
 {
@@ -617,16 +630,17 @@ void PrintDebugStatusInfoToSerial()
   Serial.println();
   delay(10);
 
-  Serial.println("Firmware Version: " FW_VERSION);
-  Serial.print("Compiled: ");
+  Serial.print(F("Firmware Version: "));
+  Serial.println(FW_VERSION);
+  Serial.print(F("Compiled: "));
   Serial.print(FW_COMPILED_DATE);
-  Serial.print(" ");
+  Serial.print(F(" "));
   Serial.println(FW_COMPILED_TIME);
 
   // Now write something out
   for (int ch = 0; ch < NumberOfChannels; ch++)
   {
-    Serial.print("Channel: ");
+    Serial.print(F("Channel: "));
     Serial.print(ch);
     
     Serial.print(F(" "));
@@ -661,7 +675,7 @@ void PrintDebugStatusInfoToSerial()
   delay(10);
 }
 
-bool anyOtherToggles(int ch) {
+bool anyOtherToggles(uint8_t ch) {
   bool anyOtherToggles = false;
   for (int i = 0; i < NumberOfChannels; i++) {
     if (i == ch) {
@@ -742,13 +756,17 @@ void ToggleProgramFlag()
   }
   Serial.println();
 }
-const SettingData factorySettings[5][8]
+
+const SettingData factorySettings[NumberOfChannels][NumberOfSetpoints]  PROGMEM
 = {
   { {9, 15, 0, 120, 0}, {11, 05, 0, 140, 0}, {13, 10, 0, 140, 0}, {14, 30, 0, 160, 0}, {16, 20, 0, 140, 0}, {17, 30, 0, 140, 0},{18, 35, 0, 120, 0}, {19, 35, 0, 0, 0} },
   { {9,  0, 0, 120, 1}, {10, 42, 0, 140, 1}, {12, 00, 0, 140, 1},  {13, 45, 0, 160, 1}, {14, 45, 0, 140, 1}, {16, 10, 0, 140, 1}, {18, 15, 0, 120, 1}, {19, 15, 0, 0, 1}  },
   { {9, 05, 0, 120, 2 }, {10, 48, 0, 160, 2}, {12, 05, 0, 160, 2},  {13, 55, 0, 180, 2},  {15, 00, 0, 180, 2}, {16, 25, 0, 180, 2}, {18, 20, 0, 140, 2}, {19, 20, 0, 0, 2}  },
   { {8, 45, 0, 120, 3 }, {10, 15, 0, 140, 3}, {12, 20, 0, 160, 3}, {14, 10, 0, 160, 3}, {15, 35, 0, 160, 3},  {16, 45, 0, 140, 3}, {18, 00, 0, 120, 3}, {19, 00, 0, 0, 3} },
-  { {8, 55, 0, 120, 4 }, {10, 30, 0, 140, 4}, {12, 30, 0, 140, 4}, {14, 25, 0, 160, 4}, {15, 55, 0, 140, 4},  {16, 55, 0, 140, 4}, {18, 55, 0, 120, 4}, {19, 55, 0, 0, 4} }
+  { {8, 55, 0, 120, 4 }, {10, 30, 0, 140, 4}, {12, 30, 0, 140, 4}, {14, 25, 0, 160, 4}, {15, 55, 0, 140, 4},  {16, 55, 0, 140, 4}, {18, 55, 0, 120, 4}, {19, 55, 0, 0, 4} },
+// After here these are new channels but not fully configured
+  { {0, 55, 0, 120, 5 }, {10, 30, 0, 140, 5}, {12, 30, 0, 140, 5}, {14, 25, 0, 160, 5}, {15, 55, 0, 140, 5},  {16, 55, 0, 140, 5}, {18, 55, 0, 120, 5}, {19, 55, 0, 0, 5} },
+  { {0, 55, 0, 120, 6 }, {10, 30, 0, 140, 6}, {12, 30, 0, 140, 6}, {14, 25, 0, 160, 6}, {15, 55, 0, 140, 6},  {16, 55, 0, 140, 6}, {18, 55, 0, 120, 6}, {19, 55, 0, 0, 6} }
 };
 
 // const SettingData autumnFactorySettings[5][8]
@@ -760,11 +778,12 @@ const SettingData factorySettings[5][8]
 //   { {8, 55, 0, 0, 4 }, {10, 30, 0, 120, 4}, {12, 30, 0, 120, 4}, {14, 25, 0, 120, 4}, {15, 55, 0, 0, 4},  {16, 55, 0, 0, 4}, {18, 55, 0, 0, 4}, {19, 55, 0, 0, 4} }
 // };
 
-const SettingData & GetFactorySetting(int ch, int sp) 
+SettingData GetFactorySetting(uint8_t ch, uint8_t sp)
 {
-  // return autumnFactorySettings[ch][sp];
-  return factorySettings[ch][sp];
-} 
+    SettingData temp;
+    memcpy_P(&temp, &factorySettings[ch][sp], sizeof(SettingData));
+    return temp;
+}
 
 void CreateRunTestPattern() 
 {
