@@ -41,6 +41,7 @@ typedef struct tagToggleState ToggleState;
 extern ToggleState ToggleStateInfo[NumberOfChannels];
 
 extern unsigned long ticks_maxPeriod;
+extern bool bMaxTogglePeriodReached;
 
 #ifdef I2C_LCD
 extern LiquidCrystal_I2C lcd;

@@ -131,12 +131,13 @@ void SerialMonitor(void)
       {
         // TODO really should only allow one channel to be toggled at
         // any time.
-        // TODO maybe toggles should automatically turn off after
+        // Note: toggles will automatically turn off after
         // some predetermined time, like 5 minutes (so watering on a toggle
         // isn't forgotten, and goes on all day.)
         if(!toggleStatus[ch]) {
           // if its off then its about to be turned on so start the 5 minute timer
           ticks_maxPeriod = millis();
+          bMaxTogglePeriodReached = false;
         }
         toggleStatus[ch] = !toggleStatus[ch];
 

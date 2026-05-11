@@ -41,7 +41,7 @@ byte settingsStatus[NumberOfChannels][NumberOfSetpoints] = {
 {0, 0, 0, 0, 0, 0, 0, 0 } 
 };
 
-bool disableMask[NumberOfChannels] = {false, false, false,  false, false, false, false};
+bool disableMask[NumberOfChannels] = {false, false, false,  false, false, false, true};
 bool toggleStatus[NumberOfChannels] = {false, false, false, false, false, false, false};
 bool channelStatus[NumberOfChannels] = {false, false, false, false, false, false, false};
 
@@ -667,6 +667,9 @@ void PrintDebugStatusInfoToSerial()
     delay(10);
   }
 
+  Serial.print(F("MaxTogglePeriodReached: "));
+  Serial.println(bMaxTogglePeriodReached);
+
   Serial.print(F("FreezeAnnouncements: "));
   Serial.println(bFreezeAnnouncements);
 
@@ -687,7 +690,7 @@ bool anyOtherToggles(uint8_t ch) {
 }
 
 bool anyTogglesActive() {
-  bool anyToggles;
+  bool anyToggles = false;
   for (int i = 0; i < NumberOfChannels; i++) {
     anyToggles |= toggleStatus[i];
   }
@@ -710,6 +713,9 @@ void ResetAllSettings()
      settingsStatus[ch][sp] = false;
     }
   }
+
+  bMaxTogglePeriodReached = false;
+
 }
 
 #ifdef I2C_LCD
@@ -764,9 +770,9 @@ const SettingData factorySettings[NumberOfChannels][NumberOfSetpoints]  PROGMEM
   { {9, 05, 0, 120, 2 }, {10, 48, 0, 160, 2}, {12, 05, 0, 160, 2},  {13, 55, 0, 180, 2},  {15, 00, 0, 180, 2}, {16, 25, 0, 180, 2}, {18, 20, 0, 140, 2}, {19, 20, 0, 0, 2}  },
   { {8, 45, 0, 120, 3 }, {10, 15, 0, 140, 3}, {12, 20, 0, 160, 3}, {14, 10, 0, 160, 3}, {15, 35, 0, 160, 3},  {16, 45, 0, 140, 3}, {18, 00, 0, 120, 3}, {19, 00, 0, 0, 3} },
   { {8, 55, 0, 120, 4 }, {10, 30, 0, 140, 4}, {12, 30, 0, 140, 4}, {14, 25, 0, 160, 4}, {15, 55, 0, 140, 4},  {16, 55, 0, 140, 4}, {18, 55, 0, 120, 4}, {19, 55, 0, 0, 4} },
-// After here these are new channels but not fully configured
-  { {0, 55, 0, 120, 5 }, {10, 30, 0, 140, 5}, {12, 30, 0, 140, 5}, {14, 25, 0, 160, 5}, {15, 55, 0, 140, 5},  {16, 55, 0, 140, 5}, {18, 55, 0, 120, 5}, {19, 55, 0, 0, 5} },
-  { {0, 55, 0, 120, 6 }, {10, 30, 0, 140, 6}, {12, 30, 0, 140, 6}, {14, 25, 0, 160, 6}, {15, 55, 0, 140, 6},  {16, 55, 0, 140, 6}, {18, 55, 0, 120, 6}, {19, 55, 0, 0, 6} }
+  { {9, 10, 0, 120, 5 }, {10, 35, 0, 120, 5}, {12, 10, 0, 120, 5}, {13, 25, 0, 120, 5}, {15, 10, 0, 120, 5},  {16, 32, 0, 120, 5}, {17, 50, 0, 120, 5}, {19, 55, 0, 0, 5} },
+  // After here these are new channels but not fully configured
+  { {0, 55, 0, 120, 6 }, {0, 30, 0, 140, 6}, {0, 30, 0, 140, 6}, {0, 25, 0, 160, 6}, {0, 55, 0, 140, 6},  {0, 55, 0, 140, 6}, {0, 55, 0, 120, 6}, {0, 55, 0, 0, 6} }
 };
 
 // const SettingData autumnFactorySettings[5][8]
